@@ -15,23 +15,24 @@ st.markdown("Análise da distribuição de postos por bandeira e volume de venda
 # Usar o cache do Streamlit acelera o app, pois os dados não são recarregados a cada interação.
 @st.cache_data
 def carregar_dados():
-    # Carrega dados cadastrais dos postos
+    # Carrega dados cadastrais dos postos (isso não muda)
     url_postos = "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/arquivos-dados-cadastrais-dos-revendedores-varejistas-de-combustiveis-automotivos/dados-cadastrais-revendedores-varejistas-combustiveis-automoveis.csv"
     df_postos = pd.read_csv(url_postos, sep=";", dtype=str, encoding='latin-1')
     df_postos_rj = df_postos[df_postos["UF"] == "RJ"].copy()
 
-    # Carrega dados de vendas do arquivo local
+    url_vendas = "https://github.com/filipe381/Ap1Tic/releases/download/dados/liquidos_Vendas_Atual.csv"
+
     try:
-        df_vendas = pd.read_csv("C:/faculdade/tic/liquidos_Vendas_Atual.csv", sep=";", dtype=str, encoding='latin-1')
+        df_vendas = pd.read_csv(url_vendas, sep=";", dtype=str, encoding='latin-1')
         # Limpeza e conversão da coluna de quantidade
         col_quantidade = 'Quantidade de Produto (mil m³)'
         if col_quantidade in df_vendas.columns:
             df_vendas[col_quantidade] = df_vendas[col_quantidade].str.replace(',', '.').astype(float)
         df_vendas_rj = df_vendas[df_vendas["UF Destino"] == "RJ"].copy()
-    except FileNotFoundError:
-        # Retorna um DataFrame vazio se o arquivo não for encontrado
-        st.error("Arquivo 'liquidos_Vendas_Atual.csv' não encontrado. Por favor, coloque-o na mesma pasta do script.")
-        df_vendas_rj = pd.DataFrame()  # Retorna DF vazio para não quebrar o resto do app
+    except Exception as e:
+        # Mostra um erro mais detalhado se o download falhar
+        st.error(f"Erro ao carregar os dados de vendas da URL: {e}")
+        df_vendas_rj = pd.DataFrame()
 
     return df_postos_rj, df_vendas_rj
 
